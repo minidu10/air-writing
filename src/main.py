@@ -1,3 +1,5 @@
+import argparse
+import datetime as dt
 import sys
 import time
 import cv2
@@ -45,7 +47,29 @@ def draw_hud(frame, recognized_text, gesture, status):
     )
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(description="Air writing — webcam hand-gesture text input.")
+    parser.add_argument(
+        "--save",
+        metavar="FILE",
+        help="Append every recognized phrase to this file with a timestamp.",
+    )
+    parser.add_argument(
+        "--backend",
+        choices=("easyocr", "trocr"),
+        default="easyocr",
+        help="OCR backend. trocr is more accurate on handwriting but heavier (~1.4GB).",
+    )
+    return parser.parse_args()
+
+
 def main():
+    args = parse_args()
+    save_fp = open(args.save, "a", encoding="utf-8") if args.save else None
+    if save_fp:
+        save_fp.write(f"\n--- session {dt.datetime.now().isoformat(timespec='seconds')} ---\n")
+        save_fp.flush()
+
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     if not cap.isOpened():
         print("Could not open webcam.", file=sys.stderr)
@@ -61,8 +85,8 @@ def main():
     tracker = HandTracker()
     canvas = AirCanvas(h, w)
 
-    print("Loading EasyOCR model (first run downloads ~64MB)...")
-    recognizer = Recognizer()
+    print(f"Loading OCR backend: {args.backend} (first run downloads model weights)...")
+    recognizer = Recognizer(backend=args.backend)
     print("Ready.")
 
     recognized_text = ""
@@ -80,6 +104,9 @@ def main():
         if text:
             recognized_text = (recognized_text + " " + text).strip() if recognized_text else text
             status = f"recognized: {text}"
+            if save_fp:
+                save_fp.write(f"{dt.datetime.now().isoformat(timespec='seconds')}  {text}\n")
+                save_fp.flush()
         else:
             status = "no text found"
         canvas.clear()
@@ -146,6 +173,8 @@ def main():
     cap.release()
     cv2.destroyAllWindows()
     tracker.close()
+    if save_fp:
+        save_fp.close()
     return 0
 
 
