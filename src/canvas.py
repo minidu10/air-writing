@@ -13,10 +13,16 @@ class AirCanvas:
         self.image = np.zeros((height, width, 3), dtype=np.uint8)
         self._last_point = None
 
-    def add_point(self, point):
+    def add_point(self, point, mode="draw"):
         if point is None:
             self._last_point = None
             return
+        if mode == "erase":
+            color = (0, 0, 0)
+            thickness = self.stroke_thickness * 4
+        else:
+            color = self.stroke_color
+            thickness = self.stroke_thickness
         if self._last_point is not None:
             # Skip absurd jumps (hand teleporting frame-to-frame).
             if math.dist(self._last_point, point) < self.width * 0.4:
@@ -24,8 +30,8 @@ class AirCanvas:
                     self.image,
                     self._last_point,
                     point,
-                    self.stroke_color,
-                    self.stroke_thickness,
+                    color,
+                    thickness,
                     cv2.LINE_AA,
                 )
         self._last_point = point

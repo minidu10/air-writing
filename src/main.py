@@ -34,7 +34,7 @@ def draw_hud(frame, recognized_text, gesture, status):
     )
     cv2.putText(
         frame,
-        "Index up = draw | Open palm = recognize | C = clear | ESC = quit",
+        "Index = draw | Index+Middle = erase | Open palm = recognize | C clear | ESC quit",
         (10, h - 15),
         cv2.FONT_HERSHEY_SIMPLEX,
         0.5,
@@ -78,7 +78,10 @@ def main():
         gesture = info["gesture"]
 
         if gesture == "pen_down":
-            canvas.add_point(info["fingertip"])
+            canvas.add_point(info["fingertip"], mode="draw")
+            recognize_streak = 0
+        elif gesture == "erase":
+            canvas.add_point(info["fingertip"], mode="erase")
             recognize_streak = 0
         elif gesture == "recognize":
             canvas.pen_up()
@@ -103,8 +106,11 @@ def main():
 
         canvas.render(frame)
         tracker.draw_landmarks(frame, info["landmarks"])
-        if info["fingertip"] is not None and gesture == "pen_down":
-            cv2.circle(frame, info["fingertip"], 8, (0, 255, 255), -1)
+        if info["fingertip"] is not None:
+            if gesture == "pen_down":
+                cv2.circle(frame, info["fingertip"], 8, (0, 255, 255), -1)
+            elif gesture == "erase":
+                cv2.circle(frame, info["fingertip"], 24, (0, 0, 255), 2)
 
         draw_hud(frame, recognized_text, gesture, status)
         cv2.imshow(WINDOW_NAME, frame)

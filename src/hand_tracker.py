@@ -68,6 +68,8 @@ class HandTracker:
 
         if index_up and middle_up and ring_up and pinky_up:
             return "recognize"
+        if index_up and middle_up and not ring_up and not pinky_up:
+            return "erase"
         if index_up and not middle_up and not ring_up and not pinky_up:
             return "pen_down"
         return "idle"
