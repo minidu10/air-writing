@@ -56,6 +56,21 @@ python src/main.py --save session.txt     # append recognized text to a file
 python src/main.py --backend trocr --save session.txt
 ```
 
+### Desktop shortcut (Windows)
+
+Double-click to launch — no terminal required.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File install_shortcut.ps1
+```
+
+This creates two icons on your Desktop:
+
+- **Air Writing** — launches with a minimized console window (useful for the first run so you can see errors).
+- **Air Writing (silent)** — runs the app with no console at all (clean experience once you've confirmed it works).
+
+The shortcuts use [launch.bat](launch.bat), which auto-activates `.venv` if present and falls back to system Python otherwise. Re-run the installer any time to refresh the shortcuts.
+
 ## Controls
 
 | Action | Gesture / Key |
