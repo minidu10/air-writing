@@ -9,6 +9,8 @@ from recognizer import Recognizer
 
 WINDOW_NAME = "Air Writing"
 RECOGNIZE_HOLD_FRAMES = 12  # ~0.4s at 30 FPS — avoids triggering on a flicker.
+IDLE_AUTO_RECOGNIZE_SEC = 2.0  # auto-trigger after this long of pen-up with ink on canvas.
+RECOGNIZE_COOLDOWN_SEC = 1.5
 
 
 def draw_hud(frame, recognized_text, gesture, status):
@@ -67,6 +69,21 @@ def main():
     status = "ready"
     recognize_streak = 0
     last_recognize_at = 0.0
+    last_drew_at = 0.0
+
+    def run_recognition():
+        nonlocal recognized_text, status, last_recognize_at
+        status = "recognizing..."
+        cv2.imshow(WINDOW_NAME, frame)
+        cv2.waitKey(1)
+        text = recognizer.recognize(canvas.get_image_for_ocr())
+        if text:
+            recognized_text = (recognized_text + " " + text).strip() if recognized_text else text
+            status = f"recognized: {text}"
+        else:
+            status = "no text found"
+        canvas.clear()
+        last_recognize_at = time.time()
 
     while True:
         ok, frame = cap.read()
@@ -76,33 +93,34 @@ def main():
 
         info = tracker.process(frame)
         gesture = info["gesture"]
+        now = time.time()
+        cooldown_over = now - last_recognize_at > RECOGNIZE_COOLDOWN_SEC
 
         if gesture == "pen_down":
             canvas.add_point(info["fingertip"], mode="draw")
             recognize_streak = 0
+            last_drew_at = now
         elif gesture == "erase":
             canvas.add_point(info["fingertip"], mode="erase")
             recognize_streak = 0
+            last_drew_at = now
         elif gesture == "recognize":
             canvas.pen_up()
             recognize_streak += 1
-            cooldown_over = time.time() - last_recognize_at > 1.5
             if recognize_streak >= RECOGNIZE_HOLD_FRAMES and not canvas.is_empty() and cooldown_over:
-                status = "recognizing..."
-                cv2.imshow(WINDOW_NAME, frame)
-                cv2.waitKey(1)
-                text = recognizer.recognize(canvas.get_image_for_ocr())
-                if text:
-                    recognized_text = (recognized_text + " " + text).strip() if recognized_text else text
-                    status = f"recognized: {text}"
-                else:
-                    status = "no text found"
-                canvas.clear()
+                run_recognition()
                 recognize_streak = 0
-                last_recognize_at = time.time()
         else:
             canvas.pen_up()
             recognize_streak = 0
+            # Auto-recognize when user pauses with ink on the canvas.
+            if (
+                not canvas.is_empty()
+                and last_drew_at > 0
+                and now - last_drew_at > IDLE_AUTO_RECOGNIZE_SEC
+                and cooldown_over
+            ):
+                run_recognition()
 
         canvas.render(frame)
         tracker.draw_landmarks(frame, info["landmarks"])
