@@ -4,6 +4,19 @@ Write letters in the air with your finger; your webcam reads the trail and print
 
 Built with Python + OpenCV + MediaPipe + EasyOCR (or TrOCR). Runs locally on your machine.
 
+## 📥 Download (Windows — no Python required)
+
+Grab the latest `AirWriting-vX.Y.Z-windows.zip` from the [**Releases page**](https://github.com/minidu10/air-writing/releases).
+
+1. Download the `.zip` (~270 MB).
+2. Extract it anywhere (e.g. `C:\Apps\AirWriting`).
+3. Double-click **`AirWriting.exe`**.
+4. First launch Windows SmartScreen may warn "Unrecognized app" → click **More info** → **Run anyway** (the .exe isn't code-signed; this is normal for open-source releases).
+
+That's it — no Python, no `pip install`. Everything is bundled.
+
+> **macOS / Linux users:** No prebuilt binary yet. Follow the [developer install](#developer-install) below.
+
 ## Demo
 
 ![demo](docs/demo.gif)
@@ -25,11 +38,11 @@ Built with Python + OpenCV + MediaPipe + EasyOCR (or TrOCR). Runs locally on you
 - A webcam
 - Windows / macOS / Linux
 
-## Install
+## Developer install
 
 ```bash
-git clone https://github.com/<your-user>/hand-gesture-writing-app.git
-cd hand-gesture-writing-app
+git clone https://github.com/minidu10/air-writing.git
+cd air-writing
 python -m venv .venv
 .venv\Scripts\activate          # Windows
 # source .venv/bin/activate     # macOS / Linux
@@ -109,6 +122,16 @@ The README references `docs/demo.gif`. To record your own:
 2. Run the app: `python src/main.py`.
 3. Use [ScreenToGif](https://www.screentogif.com/) (Windows) or [Peek](https://github.com/phw/peek) (Linux) to capture the window.
 4. Trim to 5–10 seconds, export as `docs/demo.gif`, then `git add docs/demo.gif && git commit -m "docs: add demo gif"`.
+
+## Building a standalone Windows .exe
+
+```powershell
+.\.venv\Scripts\activate
+pip install pyinstaller
+powershell -ExecutionPolicy Bypass -File build_exe.ps1
+```
+
+Output lands in `dist\AirWriting\` — copy that folder anywhere (or zip it). The hand-landmark model is pre-bundled, so the .exe works offline immediately. EasyOCR weights still download on first OCR call (~64 MB).
 
 ## Project layout
 
