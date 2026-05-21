@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import urllib.request
 
@@ -34,10 +35,18 @@ MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/hand_landmarker/"
     "hand_landmarker/float16/1/hand_landmarker.task"
 )
-DEFAULT_MODEL_DIR = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models"
-)
 MODEL_FILENAME = "hand_landmarker.task"
+
+
+def _default_model_dir():
+    # When packaged with PyInstaller, store the model next to the .exe so it's writable
+    # and persists across runs. Otherwise, use <project_root>/models/.
+    if getattr(sys, "frozen", False):
+        return os.path.join(os.path.dirname(sys.executable), "models")
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "models")
+
+
+DEFAULT_MODEL_DIR = _default_model_dir()
 
 
 def _ensure_model(model_dir=DEFAULT_MODEL_DIR):

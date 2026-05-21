@@ -1,4 +1,7 @@
 models/
+dist/
+build/
+AirWriting.spec
 __pycache__/
 *.py[cod]
 *$py.class
